@@ -1,0 +1,78 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package lmo.tcp.bridge.client;
+
+import lmo.tcp.bridge.listener.TcpDataListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
+import java.util.Arrays;
+import lmo.tcp.bridge.listener.impl.DefaultTcpDataListener;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author LMO
+ */
+public class TcpDataHandler implements Runnable {
+
+    int id;
+    Socket socket;
+    TcpDataListener listener = new DefaultTcpDataListener();
+
+    public TcpDataHandler(Socket socket) {
+        this.socket = socket;
+        this.id = socket.getPort();
+    }
+
+    public void setListener(TcpDataListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    public void run() {
+        try {
+            byte[] buffer = new byte[1024];
+            InputStream in = this.socket.getInputStream();
+            listener.onStart(id);
+            while (true) {
+                int l = in.read(buffer);
+                if (l == -1) {
+                    break;
+                }
+                listener.onRead(id, Arrays.copyOf(buffer, l));
+            }
+        } catch (Exception ex) {
+            listener.onError(id, "", ex);
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException ex) {
+            }
+            try {
+                listener.onEnd(id);
+            } catch (Exception ex) {
+            }
+        }
+    }
+
+    public void send(byte[] b) throws Exception {
+        socket.getOutputStream().write(b);
+        listener.onWrite(id, b);
+    }
+
+    public void start() {
+        new Thread(this).start();
+    }
+
+    public void end() {
+        try {
+            socket.close();
+        } catch (Exception ex) {
+        }
+    }
+
+}
