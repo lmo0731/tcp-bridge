@@ -22,6 +22,7 @@ public class BridgeData {
     public int srcPort;
     public int dstId;
     public int dstPort;
+    public int dataSeq;
     public int dataLen;
     public byte[] data;
 
@@ -41,42 +42,50 @@ public class BridgeData {
         writeInt(out, srcPort);
         writeInt(out, dstId);
         writeInt(out, dstPort);
+        writeInt(out, dataSeq);
         writeInt(out, dataLen);
         writeByte(out, (byte) '@');
         writeByte(out, (byte) '@');
-        out.write(data);
+        out.write(Arrays.copyOf(data, dataLen));
     }
 
     public static BridgeData read(InputStream in) throws IOException, BridgeDataException {
         BridgeData b = new BridgeData();
         byte header1 = readByte(in);
         if (header1 != '$') {
-            throw new BridgeDataException("protocol error");
+            throw new BridgeDataException("protocol error $" + header1);
         }
         byte header2 = readByte(in);
         if (header2 != '$') {
-            throw new BridgeDataException("protocol error");
+            throw new BridgeDataException("protocol error $$ " + header2);
         }
         b.dataType = readByte(in);
         b.srcId = readInt(in);
         b.srcPort = readInt(in);
         b.dstId = readInt(in);
         b.dstPort = readInt(in);
+        b.dataSeq = readInt(in);
         b.dataLen = readInt(in);
         byte footer1 = readByte(in);
         if (footer1 != '@') {
-            throw new BridgeDataException("protocol error");
+            throw new BridgeDataException("protocol error @ " + footer1);
         }
         byte footer2 = readByte(in);
         if (footer2 != '@') {
-            throw new BridgeDataException("protocol error");
+            throw new BridgeDataException("protocol error @@ " + footer2);
         }
-        byte[] buffer = new byte[b.dataLen];
-        int l = in.read(buffer);
-        if (l == -1) {
-            throw new IOException("end of connection");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int offset = 0;
+        int len = b.dataLen;
+        b.data = new byte[b.dataLen];
+        while (len > 0) {
+            int r = in.read(b.data, offset, len);
+            if (r == -1) {
+                throw new IOException("end of connection");
+            }
+            offset += r;
+            len -= r;
         }
-        b.data = Arrays.copyOf(buffer, l);
         return b;
     }
 
@@ -110,12 +119,38 @@ public class BridgeData {
             this.write(baos);
         } catch (IOException ex) {
         }
-        return String.format("type: %d, src: %d %d, dst: %d %d, len: %d%s",
-                dataType, srcId, srcPort,
-                dstId, dstPort, dataLen,
+        return String.format("type: %s, src: %d %d, dst: %d %d, seq: %d, len: %d%s",
+                typeToStr(dataType), srcId, srcPort,
+                dstId, dstPort, dataSeq, dataLen,
                 ""
         //                + HexDump.dumpHexString(baos.toByteArray())
         );
+    }
+
+    String typeToStr(byte t) {
+        String ret = "_";
+        if (t == TYPE_CLOSE_REQ) {
+            ret = ">C";
+        }
+        if (t == TYPE_CLOSE_RES) {
+            ret = "<C";
+        }
+        if (t == TYPE_OPEN_REQ) {
+            ret = ">O";
+        }
+        if (t == TYPE_OPEN_RES) {
+            ret = "<O";
+        }
+        if (t == TYPE_REQ) {
+            ret = ">D";
+        }
+        if (t == TYPE_RES) {
+            ret = "<D";
+        }
+        if (t == TYPE_START) {
+            ret = "S";
+        }
+        return ret;
     }
 
 }

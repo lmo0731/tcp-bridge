@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.util.Arrays;
 import lmo.tcp.bridge.listener.impl.DefaultTcpDataListener;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -23,6 +22,7 @@ public class TcpDataHandler implements Runnable {
     Socket socket;
     int dstPort;
     TcpDataListener listener = new DefaultTcpDataListener();
+    boolean ready = false;
 
     public TcpDataHandler(Socket socket, int id) {
         this.socket = socket;
@@ -41,18 +41,36 @@ public class TcpDataHandler implements Runnable {
         this.dstPort = dstPort;
     }
 
+    public void waitReady() {
+        if (!ready) {
+            synchronized (this) {
+                try {
+                    wait();
+                } catch (InterruptedException ex) {
+                }
+            }
+        }
+    }
+
+    public void ready() {
+        synchronized (this) {
+            notify();
+        }
+    }
+
     @Override
     public void run() {
         try {
             byte[] buffer = new byte[1024];
             InputStream in = this.socket.getInputStream();
             listener.onStart(id);
+            int seq = 0;
             while (true) {
                 int l = in.read(buffer);
                 if (l == -1) {
                     break;
                 }
-                listener.onRead(id, Arrays.copyOf(buffer, l));
+                listener.onRead(id, seq++, Arrays.copyOf(buffer, l));
             }
         } catch (Exception ex) {
             listener.onError(id, "", ex);

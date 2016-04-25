@@ -11,7 +11,7 @@ package lmo.tcp.bridge.listener;
  */
 public interface TcpDataListener {
 
-    void onRead(int id, byte[] b) throws Exception;
+    void onRead(int id, int seq, byte[] b) throws Exception;
 
     void onWrite(int id, byte[] b) throws Exception;
 
