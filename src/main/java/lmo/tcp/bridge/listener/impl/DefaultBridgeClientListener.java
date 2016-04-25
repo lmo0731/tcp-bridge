@@ -14,10 +14,6 @@ import lmo.tcp.bridge.listener.BridgeClientListener;
 public class DefaultBridgeClientListener implements BridgeClientListener {
 
     @Override
-    public void onError(String msg, Exception ex) {
-    }
-
-    @Override
     public void onStart() {
     }
 

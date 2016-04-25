@@ -11,8 +11,6 @@ package lmo.tcp.bridge.listener;
  */
 public interface BridgeClientListener {
 
-    public void onError(String msg, Exception ex);
-
     public void onStart();
 
     public void onEnd();

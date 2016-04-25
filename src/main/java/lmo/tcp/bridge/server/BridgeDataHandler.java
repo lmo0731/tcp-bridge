@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import lmo.tcp.bridge.BridgeData;
+import lmo.tcp.bridge.BridgeDataException;
 import lmo.tcp.bridge.listener.BridgeDataListener;
 import lmo.tcp.bridge.listener.impl.DefaultBridgeDataListener;
 import org.apache.log4j.Logger;
@@ -36,11 +37,13 @@ public class BridgeDataHandler implements Runnable {
     public void run() {
         try {
             InputStream in = this.socket.getInputStream();
-            while (!this.socket.isClosed()) {
+            listener.onConnect();
+            while (true) {
                 try {
                     BridgeData d = BridgeData.read(in);
                     listener.onRead(d);
-                } catch (Exception ex) {
+                } catch (BridgeDataException ex) {
+                    listener.onError("bridge error", ex);
                 }
             }
         } catch (Exception ex) {

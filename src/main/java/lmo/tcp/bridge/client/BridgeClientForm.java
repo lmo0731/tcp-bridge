@@ -5,13 +5,22 @@
  */
 package lmo.tcp.bridge.client;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.io.IOException;
+import java.io.Writer;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.logging.Level;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
 import lmo.tcp.bridge.listener.BridgeClientListener;
 import lmo.tcp.bridge.server.BridgeServer;
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.WriterAppender;
 
 /**
  *
@@ -19,14 +28,68 @@ import org.apache.log4j.BasicConfigurator;
  */
 public class BridgeClientForm extends javax.swing.JFrame {
 
-    boolean started = false;
-    BridgeClient client;
+    BridgeClient client = null;
+    Logger logger = Logger.getLogger("UI");
 
     /**
      * Creates new form BridgeClientForm
      */
     public BridgeClientForm() {
         initComponents();
+        final javax.swing.JTextArea finalTextArea = textArea;
+        Logger.getRootLogger().addAppender(new WriterAppender(new PatternLayout(PatternLayout.TTCC_CONVERSION_PATTERN), new Writer() {
+
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+                finalTextArea.append(new String(Arrays.copyOfRange(cbuf, off, off + len)));
+            }
+
+            @Override
+            public void flush() throws IOException {
+            }
+
+            @Override
+            public void close() throws IOException {
+            }
+        }));
+        textArea.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                check();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                check();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                check();
+            }
+
+            public void check() {
+                if (textArea.getLineCount() > 5000) {//make sure no more than 4 lines
+                    try {
+                        int end = textArea.getLineStartOffset(textArea.getLineCount() - 5000);
+                        textArea.getDocument().remove(0, end);
+                    } catch (BadLocationException ex) {
+                    }
+                }
+            }
+        });
+        jScrollPane1.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+            @Override
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+                if (e.getAdjustable().getValue() + e.getAdjustable().getVisibleAmount() > e.getAdjustable().getMaximum() - 200) {
+                    e.getAdjustable().setValue(e.getAdjustable().getMaximum());
+                }
+            }
+        });
     }
 
     /**
@@ -53,6 +116,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
         remotePortField = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         remoteIdField = new javax.swing.JTextField();
+        clearButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -73,6 +137,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
         jLabel3.setText("Local Port");
 
         textArea.setColumns(20);
+        textArea.setFont(new java.awt.Font("Consolas", 0, 12)); // NOI18N
         textArea.setRows(5);
         jScrollPane1.setViewportView(textArea);
 
@@ -91,6 +156,13 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
         remoteIdField.setText("2");
 
+        clearButton.setText("Clear");
+        clearButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clearButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -101,7 +173,10 @@ public class BridgeClientForm extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(connectButton)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(connectButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(clearButton))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(serverLabel)
@@ -140,7 +215,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(remoteIdField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(remotePortField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
@@ -149,9 +224,11 @@ public class BridgeClientForm extends javax.swing.JFrame {
                     .addComponent(portField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(connectButton)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(connectButton)
+                    .addComponent(clearButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -162,50 +239,36 @@ public class BridgeClientForm extends javax.swing.JFrame {
         BridgeClientListener listener = new BridgeClientListener() {
 
             @Override
-            public void onError(String msg, Exception ex) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                try {
-                    ex.printStackTrace(new PrintStream(baos, true, "UTF-8"));
-                } catch (UnsupportedEncodingException ex1) {
-                }
-                textArea.append("ERROR: " + msg + "\n");
-                textArea.append(baos.toString());
-                textArea.append("\n");
-            }
-
-            @Override
             public void onStart() {
-                started = true;
                 connectButton.setText("Disconnect");
             }
 
             @Override
             public void onEnd() {
-                started = false;
                 connectButton.setText("Connect");
             }
         };
-        try {
-            if (started) {
-                client.running = false;
-                client.close();
-            } else {
-                URI serverURI = URI.create("tcp://" + serverField.getText());
-                int port = Integer.parseInt(portField.getText());
-                String bridgeHost = hostField.getText();
-                int dstId = Integer.parseInt(remoteIdField.getText());
-                int dstPort = Integer.parseInt(remotePortField.getText());
-                int id = Integer.parseInt(idField.getText());
-                client = new BridgeClient(serverURI.getHost(), serverURI.getPort(), port, id, bridgeHost);
-                client.setRemote(dstId, dstPort);
+        if (client != null && client.isConnected()) {
+            client.running = false;
+            client.disconnect();
+        } else {
+            URI serverURI = URI.create("tcp://" + serverField.getText());
+            int port = Integer.parseInt(portField.getText());
+            String bridgeHost = hostField.getText();
+            int dstId = Integer.parseInt(remoteIdField.getText());
+            int dstPort = Integer.parseInt(remotePortField.getText());
+            int id = Integer.parseInt(idField.getText());
+            client = new BridgeClient(serverURI.getHost(), serverURI.getPort(), port, id, bridgeHost);
+            client.setRemote(dstId, dstPort);
 
-                client.setListener(listener);
-                client.start();
-            }
-        } catch (Exception ex) {
-            listener.onError("", ex);
+            client.setListener(listener);
+            client.connect();
         }
     }//GEN-LAST:event_connectButtonActionPerformed
+
+    private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
+        textArea.setText("");
+    }//GEN-LAST:event_clearButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -248,6 +311,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton clearButton;
     private javax.swing.JButton connectButton;
     private javax.swing.JTextField hostField;
     private javax.swing.JTextField idField;

@@ -45,15 +45,15 @@ public class BridgeData {
         out.write(data);
     }
 
-    public static BridgeData read(InputStream in) throws IOException {
+    public static BridgeData read(InputStream in) throws IOException, BridgeDataException {
         BridgeData b = new BridgeData();
         byte header1 = readByte(in);
         if (header1 != '$') {
-            throw new IOException("protocol error");
+            throw new BridgeDataException("protocol error");
         }
         byte header2 = readByte(in);
         if (header2 != '$') {
-            throw new IOException("protocol error");
+            throw new BridgeDataException("protocol error");
         }
         b.dataType = readByte(in);
         b.srcId = readInt(in);
@@ -63,11 +63,11 @@ public class BridgeData {
         b.dataLen = readInt(in);
         byte footer1 = readByte(in);
         if (footer1 != '@') {
-            throw new IOException("protocol error");
+            throw new BridgeDataException("protocol error");
         }
         byte footer2 = readByte(in);
         if (footer2 != '@') {
-            throw new IOException("protocol error");
+            throw new BridgeDataException("protocol error");
         }
         byte[] buffer = new byte[b.dataLen];
         int l = in.read(buffer);
@@ -112,7 +112,7 @@ public class BridgeData {
                 dataType, srcId, srcPort,
                 dstId, dstPort, dataLen,
                 ""
-                + HexDump.dumpHexString(baos.toByteArray())
+        //                + HexDump.dumpHexString(baos.toByteArray())
         );
     }
 
