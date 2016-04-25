@@ -30,6 +30,8 @@ public class BridgeData {
     public static final byte TYPE_CLOSE_RES = 2;
     public static final byte TYPE_REQ = 3;
     public static final byte TYPE_RES = 4;
+    public static final byte TYPE_OPEN_REQ = 5;
+    public static final byte TYPE_OPEN_RES = 6;
 
     public void write(OutputStream out) throws IOException {
         writeByte(out, (byte) '$');

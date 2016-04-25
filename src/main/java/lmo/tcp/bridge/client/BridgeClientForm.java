@@ -117,6 +117,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         remoteIdField = new javax.swing.JTextField();
         clearButton = new javax.swing.JButton();
+        jCheckBox1 = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -163,6 +164,9 @@ public class BridgeClientForm extends javax.swing.JFrame {
             }
         });
 
+        jCheckBox1.setSelected(true);
+        jCheckBox1.setText("onDemand");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -176,7 +180,9 @@ public class BridgeClientForm extends javax.swing.JFrame {
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(connectButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(clearButton))
+                                .addComponent(clearButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBox1))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(serverLabel)
@@ -226,7 +232,8 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(connectButton)
-                    .addComponent(clearButton))
+                    .addComponent(clearButton)
+                    .addComponent(jCheckBox1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
                 .addContainerGap())
@@ -262,7 +269,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
             client.setRemote(dstId, dstPort);
 
             client.setListener(listener);
-            client.connect();
+            client.connect(jCheckBox1.isSelected());
         }
     }//GEN-LAST:event_connectButtonActionPerformed
 
@@ -315,6 +322,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
     private javax.swing.JButton connectButton;
     private javax.swing.JTextField hostField;
     private javax.swing.JTextField idField;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

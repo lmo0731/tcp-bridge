@@ -77,6 +77,16 @@ public class BridgeServer implements Runnable {
                             BridgeDataHandler client = clients.get(d.dstId);
                             if (client != null) {
                                 client.send(d);
+                            } else if (d.dataType != BridgeData.TYPE_CLOSE_REQ && d.dataType != BridgeData.TYPE_CLOSE_RES) {
+                                BridgeData d1 = new BridgeData();
+                                d1.dataType = (d.dataType == BridgeData.TYPE_REQ || d.dataType == BridgeData.TYPE_OPEN_REQ) ? (BridgeData.TYPE_CLOSE_RES) : (BridgeData.TYPE_CLOSE_REQ);
+                                d1.srcId = d.dstId;
+                                d1.srcPort = d.dstPort;
+                                d1.dstId = d.srcId;
+                                d1.dstPort = d.srcPort;
+                                d1.dataLen = 0;
+                                d1.data = new byte[0];
+                                dataHandler.send(d1);
                             }
                         }
                     }

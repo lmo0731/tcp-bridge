@@ -21,15 +21,24 @@ public class TcpDataHandler implements Runnable {
 
     int id;
     Socket socket;
+    int dstPort;
     TcpDataListener listener = new DefaultTcpDataListener();
 
-    public TcpDataHandler(Socket socket) {
+    public TcpDataHandler(Socket socket, int id) {
         this.socket = socket;
-        this.id = socket.getPort();
+        this.id = id;
     }
 
     public void setListener(TcpDataListener listener) {
         this.listener = listener;
+    }
+
+    public int getDstPort() {
+        return dstPort;
+    }
+
+    public void setDstPort(int dstPort) {
+        this.dstPort = dstPort;
     }
 
     @Override
