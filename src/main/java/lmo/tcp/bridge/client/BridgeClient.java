@@ -155,7 +155,7 @@ public class BridgeClient implements Runnable {
         }
     }
 
-    public synchronized void connect(final boolean onDemand) {
+    public synchronized void connect() {
         final Logger logger = Logger.getLogger("server." + serverHost + "." + serverPort);
         logger.info("connecting to server");
         if (serverConnection != null) {
@@ -240,10 +240,6 @@ public class BridgeClient implements Runnable {
                 if (serverConnection == dataHandler) {
                     serverConnection = null;
                     stop();
-                    if (onDemand) {
-                        logger.warn("on demain server connection. restablishing server connection");
-                        connect(onDemand);
-                    }
                 }
             }
 
