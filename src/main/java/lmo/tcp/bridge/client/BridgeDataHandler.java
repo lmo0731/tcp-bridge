@@ -48,7 +48,7 @@ public class BridgeDataHandler implements Runnable {
                 }
             }
         } catch (Exception ex) {
-            listener.onError("", ex);
+            listener.onError("server connection error", ex);
         } finally {
             try {
                 socket.close();

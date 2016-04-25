@@ -27,10 +27,10 @@ public class BridgeClient implements Runnable {
 
     Logger logger;
     int srcId;
-    int port;
+    int localPort;
     String serverHost;
     int serverPort;
-    String hostToBridge = "localhost";
+    String localHost = "localhost";
     int dstId;
     int dstPort;
     ServerSocket ss;
@@ -40,13 +40,13 @@ public class BridgeClient implements Runnable {
     BridgeClientListener listener = new DefaultBridgeClientListener();
     boolean running = false;
 
-    public BridgeClient(String serverHost, int serverPort, int localPort, int srcId, String hostToBridge) {
+    public BridgeClient(String serverHost, int serverPort, int localPort, int srcId, String localHost) {
         this.serverHost = serverHost;
         this.serverPort = serverPort;
-        this.port = localPort;
+        this.localPort = localPort;
         this.srcId = srcId;
         this.logger = Logger.getLogger("CLIENT." + localPort);
-        this.hostToBridge = hostToBridge;
+        this.localHost = localHost;
         new Timer().schedule(new TimerTask() {
 
             public void run() {
@@ -57,7 +57,7 @@ public class BridgeClient implements Runnable {
     }
 
     public int getPort() {
-        return port;
+        return localPort;
     }
 
     public void setListener(BridgeClientListener listener) {
@@ -75,7 +75,7 @@ public class BridgeClient implements Runnable {
         while (running) {
             try {
                 serverConnection = connect();
-                ss = new ServerSocket(port);
+                ss = new ServerSocket(localPort);
                 listener.onStart();
                 while (true) {
                     final Socket s = ss.accept();
@@ -168,7 +168,7 @@ public class BridgeClient implements Runnable {
                         if (handler != null) {
                             handler.send(data.data);
                         } else {
-                            open(data.srcId, data.srcPort, hostToBridge, data.dstPort);
+                            open(data.srcId, data.srcPort, localHost, data.dstPort);
                             this.onRead(data);
                         }
                     } else if (data.dataType == BridgeData.TYPE_RES) {
