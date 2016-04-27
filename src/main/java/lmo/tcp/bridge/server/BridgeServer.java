@@ -41,6 +41,7 @@ public class BridgeServer implements Runnable {
         Timer timer = new Timer();
         try {
             ss = new ServerSocket(port);
+            ss.setReuseAddress(true);
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -66,6 +67,7 @@ public class BridgeServer implements Runnable {
                         if (d.dataType == BridgeData.TYPE_START) {
                             if (!clients.containsKey(d.srcId)) {
                                 dataHandler.id = d.srcId;
+                                dataHandler.description = new String(d.data);
                                 logger.info("bridge client connected: " + dataHandler.id);
                                 clients.put(dataHandler.id, dataHandler);
                                 dataHandler.send(d);

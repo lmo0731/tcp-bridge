@@ -24,6 +24,7 @@ public class BridgeDataHandler implements Runnable {
     Integer id = null;
     Socket socket;
     BridgeDataListener listener = new DefaultBridgeDataListener();
+    String description;
 
     public BridgeDataHandler(Socket socket) {
         this.socket = socket;
@@ -75,4 +76,10 @@ public class BridgeDataHandler implements Runnable {
         } catch (IOException ex) {
         }
     }
+
+    @Override
+    public String toString() {
+        return (description != null || description.trim().isEmpty()) ? description : "unknown";
+    }
+
 }

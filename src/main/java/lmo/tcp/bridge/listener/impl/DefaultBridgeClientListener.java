@@ -14,11 +14,23 @@ import lmo.tcp.bridge.listener.BridgeClientListener;
 public class DefaultBridgeClientListener implements BridgeClientListener {
 
     @Override
-    public void onStart() {
+    public void onConnectionStart() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void onEnd() {
+    public void onConnectionEnd() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void onServerStart() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void onServerEnd() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

@@ -30,23 +30,22 @@ public class BridgeClient implements Runnable {
     int localPort;
     String serverHost;
     int serverPort;
-    String localHost = "localhost";
+    String dstHost = "localhost";
     int dstId;
     int dstPort;
+    String description;
     ServerSocket ss;
     BridgeDataHandler serverConnection;
     Map<Integer, TcpDataHandler> clients = new HashMap<>();
     Map<Integer, TcpDataHandler> servers = new HashMap<>();
     BridgeClientListener listener = new DefaultBridgeClientListener();
-    boolean running = false;
 
-    public BridgeClient(String serverHost, int serverPort, int localPort, int srcId, String localHost) {
+    public BridgeClient(String serverHost, int serverPort, int srcId, String description) {
         this.serverHost = serverHost;
         this.serverPort = serverPort;
-        this.localPort = localPort;
         this.srcId = srcId;
-        this.logger = Logger.getLogger("bridgeclient." + localPort);
-        this.localHost = localHost;
+        this.description = description;
+        this.logger = Logger.getLogger("bridgeclient");
     }
 
     public int getPort() {
@@ -57,9 +56,12 @@ public class BridgeClient implements Runnable {
         this.listener = listener;
     }
 
-    void setRemote(int id, int port) {
-        dstId = id;
-        dstPort = port;
+    void setRemote(int dstId, String dstHost, int dstPort, int localPort) {
+        this.dstId = dstId;
+        this.dstHost = dstHost;
+        this.dstPort = dstPort;
+        this.localPort = localPort;
+        this.logger = Logger.getLogger("bridgeclient." + localPort);
     }
 
     @Override
@@ -67,13 +69,16 @@ public class BridgeClient implements Runnable {
         Timer timer = new Timer();
         try {
             ss = new ServerSocket(localPort);
+            ss.setReuseAddress(true);
             timer.schedule(new TimerTask() {
+                @Override
                 public void run() {
                     logger.info("clients: " + clients);
                     logger.info("servers: " + servers);
                 }
             }, 0, 5000);
-            listener.onStart();
+            logger.info("client server started on port " + localPort);
+            listener.onServerStart();
             while (true) {
                 final Socket s = ss.accept();
                 logger.info("client connected: " + s);
@@ -110,8 +115,8 @@ public class BridgeClient implements Runnable {
                         d.dataType = BridgeData.TYPE_OPEN_REQ;
                         d.dstId = dstId;
                         d.dstPort = dstPort;
-                        d.dataLen = 0;
-                        d.data = new byte[0];
+                        d.data = dstHost.getBytes();
+                        d.dataLen = d.data.length;
                         serverConnection.send(d);
                         logger.info("waiting for ready");
                         dataHandler.waitReady();
@@ -147,12 +152,20 @@ public class BridgeClient implements Runnable {
             } catch (Exception ex) {
             }
             try {
+                ss = null;
+            } catch (Exception ex) {
+            }
+            try {
                 timer.cancel();
                 timer.purge();
             } catch (Exception ex) {
             }
-            listener.onEnd();
+            listener.onServerEnd();
         }
+    }
+
+    public boolean isStarted() {
+        return ss != null;
     }
 
     public synchronized void connect() {
@@ -172,8 +185,8 @@ public class BridgeClient implements Runnable {
                 BridgeData d = new BridgeData();
                 d.srcId = srcId;
                 d.dataType = BridgeData.TYPE_START;
-                d.data = new byte[0];
-                d.dataLen = 0;
+                d.data = description.getBytes();
+                d.dataLen = d.data.length;
                 dataHandler.setSrcId(srcId);
                 dataHandler.send(d);
             }
@@ -182,7 +195,7 @@ public class BridgeClient implements Runnable {
             public void onRead(BridgeData data) throws Exception {
                 logger.info("data from server: " + data);
                 if (data.dataType == BridgeData.TYPE_OPEN_REQ) {
-                    open(data.srcId, data.srcPort, localHost, data.dstPort);
+                    open(data.srcId, data.srcPort, new String(data.data), data.dstPort);
                 } else if (data.dataType == BridgeData.TYPE_OPEN_RES) {
                     TcpDataHandler handler = clients.get(data.dstPort);
                     if (handler != null) {
@@ -218,7 +231,7 @@ public class BridgeClient implements Runnable {
                         dataHandler.end();
                     } else {
                         serverConnection = dataHandler;
-                        start();
+                        listener.onConnectionStart();
                     }
                 }
             }
@@ -239,6 +252,7 @@ public class BridgeClient implements Runnable {
                 logger.info("disconnected from server");
                 if (serverConnection == dataHandler) {
                     serverConnection = null;
+                    listener.onConnectionEnd();
                     stop();
                 }
             }
@@ -313,11 +327,11 @@ public class BridgeClient implements Runnable {
         dataHandler.start();
     }
 
-    private void start() {
+    public void start() {
         new Thread(this).start();
     }
 
-    private void stop() {
+    public void stop() {
         try {
             ss.close();
         } catch (Exception ex) {

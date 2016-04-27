@@ -6,9 +6,9 @@
 package lmo.tcp.bridge.client;
 
 import java.net.URI;
-import java.util.ArrayList;
-import javax.swing.AbstractListModel;
-import javax.swing.DefaultListModel;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import lmo.tcp.bridge.listener.BridgeClientListener;
 import lmo.tcp.bridge.server.BridgeServer;
 import org.apache.log4j.BasicConfigurator;
@@ -22,13 +22,14 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
     BridgeClient client = null;
     Logger logger = Logger.getLogger("UI");
+    boolean started = false;
 
     /**
      * Creates new form BridgeClientForm
      */
     public BridgeClientForm() {
         initComponents();
-        if (jCheckBox1.isSelected()) {
+        if (onDemandCheckBox.isSelected()) {
             connectButtonActionPerformed(null);
         }
     }
@@ -47,17 +48,20 @@ public class BridgeClientForm extends javax.swing.JFrame {
         serverLabel = new javax.swing.JLabel();
         serverField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        hostField = new javax.swing.JTextField();
-        portField = new javax.swing.JTextField();
+        remoteServerField = new javax.swing.JTextField();
+        localPortField = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         connectButton = new javax.swing.JButton();
-        jLabel4 = new javax.swing.JLabel();
-        remotePortField = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         remoteIdField = new javax.swing.JTextField();
-        jCheckBox1 = new javax.swing.JCheckBox();
+        onDemandCheckBox = new javax.swing.JCheckBox();
+        jSeparator1 = new javax.swing.JSeparator();
+        startButton = new javax.swing.JButton();
+        serverStatusLabel = new javax.swing.JLabel();
+        clientStatusField = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("TCP Bridge Client");
         setResizable(false);
 
         idField.setText("2");
@@ -68,11 +72,16 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
         serverField.setText("103.9.89.165:1783");
 
-        jLabel2.setText("Local Host");
+        jLabel2.setText("Remote Server");
 
-        hostField.setText("localhost");
+        remoteServerField.setText("localhost:3389");
+        remoteServerField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                remoteServerFieldActionPerformed(evt);
+            }
+        });
 
-        portField.setText("13000");
+        localPortField.setText("13000");
 
         jLabel3.setText("Local Port");
 
@@ -83,116 +92,198 @@ public class BridgeClientForm extends javax.swing.JFrame {
             }
         });
 
-        jLabel4.setText("Remote Port");
-
-        remotePortField.setText("3389");
-
         jLabel5.setText("Remote ID");
 
         remoteIdField.setText("2");
 
-        jCheckBox1.setSelected(true);
-        jCheckBox1.setText("onDemand");
+        onDemandCheckBox.setSelected(true);
+        onDemandCheckBox.setText("On demand");
+
+        jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
+
+        startButton.setText("Start");
+        startButton.setEnabled(false);
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+
+        serverStatusLabel.setText("...");
+
+        clientStatusField.setText("...");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(10, 10, 10)
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(serverStatusLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(connectButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBox1))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(serverLabel)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel5))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(onDemandCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(serverLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(portField)
+                            .addComponent(serverField)
                             .addComponent(idField)
-                            .addComponent(hostField, javax.swing.GroupLayout.DEFAULT_SIZE, 207, Short.MAX_VALUE)
-                            .addComponent(remotePortField)
-                            .addComponent(remoteIdField)
-                            .addComponent(serverField))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(connectButton, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 7, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel3))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(remoteServerField, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(remoteIdField, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(localPortField, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(startButton, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addComponent(clientStatusField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(serverLabel)
-                    .addComponent(serverField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(idField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(hostField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(remoteIdField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(remotePortField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(portField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(connectButton)
-                    .addComponent(jCheckBox1))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(remoteServerField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(remoteIdField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel5))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel3)
+                                    .addComponent(localPortField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(startButton)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(serverField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(serverLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(idField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel1))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(connectButton)
+                                    .addComponent(onDemandCheckBox))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(clientStatusField, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(serverStatusLabel, javax.swing.GroupLayout.Alignment.TRAILING))))
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
+        final Timer timer = new Timer();
         BridgeClientListener listener = new BridgeClientListener() {
 
             @Override
-            public void onStart() {
+            public void onConnectionStart() {
                 connectButton.setText("Disconnect");
+                startButton.setEnabled(true);
+                serverStatusLabel.setText("connected");
+                final long startMs = new Date().getTime();
+                timer.schedule(new TimerTask() {
+
+                    @Override
+                    public void run() {
+                        long runtime = (new Date().getTime() - startMs) / 1000;
+                        long sec = runtime % 60;
+                        long min = runtime / 60 % 60;
+                        long hour = runtime / 60 / 60;
+                        serverStatusLabel.setText(String.format("%d:%02d:%02d", hour, min, sec));
+                    }
+                }, 0, 1000);
+                if (onDemandCheckBox.isSelected() && started) {
+                    startButtonActionPerformed(null);
+                }
             }
 
             @Override
-            public void onEnd() {
+            public void onConnectionEnd() {
                 connectButton.setText("Connect");
-                if (jCheckBox1.isSelected()) {
+                if (onDemandCheckBox.isSelected()) {
                     connectButtonActionPerformed(null);
                 }
+                startButton.setEnabled(false);
+                serverStatusLabel.setText("disconnected");
+                timer.cancel();
+                timer.purge();
+            }
+
+            @Override
+            public void onServerStart() {
+                startButton.setText("Stop");
+                clientStatusField.setText("remote connection started");
+            }
+
+            @Override
+            public void onServerEnd() {
+                startButton.setText("Start");
+                if (onDemandCheckBox.isSelected() && started) {
+                    startButtonActionPerformed(null);
+                }
+                clientStatusField.setText("remote connection ended");
             }
         };
         if (client != null && client.isConnected()) {
-            client.running = false;
             client.disconnect();
         } else {
             URI serverURI = URI.create("tcp://" + serverField.getText());
-            int port = Integer.parseInt(portField.getText());
-            String bridgeHost = hostField.getText();
-            int dstId = Integer.parseInt(remoteIdField.getText());
-            int dstPort = Integer.parseInt(remotePortField.getText());
             int id = Integer.parseInt(idField.getText());
-            client = new BridgeClient(serverURI.getHost(), serverURI.getPort(), port, id, bridgeHost);
-            client.setRemote(dstId, dstPort);
-
+            client = new BridgeClient(serverURI.getHost(), serverURI.getPort(), id, System.getProperty("user.name"));
             client.setListener(listener);
             client.connect();
         }
     }//GEN-LAST:event_connectButtonActionPerformed
+
+    private void remoteServerFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remoteServerFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_remoteServerFieldActionPerformed
+
+    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        if (client.isConnected()) {
+            if (!client.isStarted()) {
+                int localPort = Integer.parseInt(localPortField.getText());
+                URI remoteURI = URI.create("tcp://" + remoteServerField.getText());
+                int dstId = Integer.parseInt(remoteIdField.getText());
+                int dstPort = remoteURI.getPort();
+                String dstHost = remoteURI.getHost();
+                client.setRemote(dstId, dstHost, dstPort, localPort);
+                client.start();
+                if (evt != null) {
+                    started = true;
+                }
+            } else {
+                client.stop();
+                if (evt != null) {
+                    started = false;
+                }
+            }
+        }
+    }//GEN-LAST:event_startButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -235,19 +326,21 @@ public class BridgeClientForm extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel clientStatusField;
     private javax.swing.JButton connectButton;
-    private javax.swing.JTextField hostField;
     private javax.swing.JTextField idField;
-    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JTextField portField;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JTextField localPortField;
+    private javax.swing.JCheckBox onDemandCheckBox;
     private javax.swing.JTextField remoteIdField;
-    private javax.swing.JTextField remotePortField;
+    private javax.swing.JTextField remoteServerField;
     private javax.swing.JTextField serverField;
     private javax.swing.JLabel serverLabel;
+    private javax.swing.JLabel serverStatusLabel;
+    private javax.swing.JButton startButton;
     // End of variables declaration//GEN-END:variables
 }

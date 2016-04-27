@@ -11,8 +11,12 @@ package lmo.tcp.bridge.listener;
  */
 public interface BridgeClientListener {
 
-    public void onStart();
+    public void onConnectionStart();
 
-    public void onEnd();
+    public void onConnectionEnd();
+
+    public void onServerStart();
+
+    public void onServerEnd();
 
 }
