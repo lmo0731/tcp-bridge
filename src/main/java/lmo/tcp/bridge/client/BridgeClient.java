@@ -256,11 +256,13 @@ public class BridgeClient implements Runnable {
                 for (TcpDataHandler h : servers.values()) {
                     h.end();
                 }
-                logger.info("disconnected from server");
-                if (serverConnection == dataHandler) {
+                logger.info("disconnected from server: " + serverConnection);
+                if (serverConnection == dataHandler || serverConnection == null) {
                     serverConnection = null;
                     listener.onConnectionEnd();
                     stop();
+                } else {
+                    logger.info("server connection established: " + serverConnection);
                 }
             }
 

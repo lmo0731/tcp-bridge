@@ -318,7 +318,6 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 public void onConnectionEnd() {
                     timer.cancel();
                     timer.purge();
-                    client.stop();
                     logger.info("server connection ended, starting again");
                     client.connect();
                 }
