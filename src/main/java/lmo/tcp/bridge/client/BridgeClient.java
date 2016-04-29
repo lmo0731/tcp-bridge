@@ -225,7 +225,7 @@ public class BridgeClient implements Runnable {
                     }
                 } else if (data.dataType == BridgeData.TYPE_START) {
                     logger.info("server connection success: ID=" + data.dstId);
-                    dataHandler.setSrcId(data.srcId);
+                    dataHandler.setSrcId(data.dstId);
                     if (serverConnection != null) {
                         logger.warn("another server connection already exists. closing this connection");
                         dataHandler.end();
