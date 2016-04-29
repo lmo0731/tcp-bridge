@@ -7,6 +7,7 @@ package lmo.tcp.bridge.client;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 import lmo.tcp.bridge.listener.BridgeClientListener;
@@ -196,7 +197,8 @@ public class BridgeClientForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
-        final Timer timer = new Timer();
+        final LinkedList<Timer> timers = new LinkedList<>();
+
         BridgeClientListener listener = new BridgeClientListener() {
 
             @Override
@@ -205,6 +207,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 startButton.setEnabled(true);
                 serverStatusLabel.setText("connected");
                 final long startMs = new Date().getTime();
+                Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
 
                     @Override
@@ -216,6 +219,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                         serverStatusLabel.setText(String.format("%d:%02d:%02d", hour, min, sec));
                     }
                 }, 0, 1000);
+                timers.add(timer);
                 if (onDemandCheckBox.isSelected() && started) {
                     startButtonActionPerformed(null);
                 }
@@ -223,8 +227,8 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
             @Override
             public void onConnectionEnd() {
-                timer.cancel();
-                timer.purge();
+                timers.getFirst().cancel();
+                timers.getFirst().purge();
                 connectButton.setText("Connect");
                 if (onDemandCheckBox.isSelected()) {
                     connectButtonActionPerformed(null);
@@ -291,7 +295,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
             new BridgeServer(Integer.parseInt(args[0])).start();
             return;
         } else if (args.length == 7) {
-            final Timer timer = new Timer();
+            final LinkedList<Timer> timers = new LinkedList<>();
             final BridgeClient client = new BridgeClient(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]), System.getProperty("user.name"));
             client.setRemote(Integer.parseInt(args[3]), args[4], Integer.parseInt(args[5]), Integer.parseInt(args[6]));
             client.setListener(new BridgeClientListener() {
@@ -299,6 +303,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 @Override
                 public void onConnectionStart() {
                     final long startMs = new Date().getTime();
+                    Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
 
                         @Override
@@ -310,14 +315,15 @@ public class BridgeClientForm extends javax.swing.JFrame {
                             logger.info(String.format("%d:%02d:%02d", hour, min, sec));
                         }
                     }, 0, 5000);
+                    timers.add(timer);
                     logger.info("server connection started, starting local server");
                     client.start();
                 }
 
                 @Override
                 public void onConnectionEnd() {
-                    timer.cancel();
-                    timer.purge();
+                    timers.getFirst().cancel();
+                    timers.getFirst().purge();
                     logger.info("server connection ended, starting again");
                     client.connect();
                 }
