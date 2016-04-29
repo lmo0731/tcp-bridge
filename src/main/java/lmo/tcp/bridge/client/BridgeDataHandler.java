@@ -37,6 +37,7 @@ public class BridgeDataHandler implements Runnable {
     public void run() {
         try {
             socket = new Socket(host, port);
+            socket.setSoTimeout(120000);
             listener.onConnect();
             InputStream in = socket.getInputStream();
             while (true) {

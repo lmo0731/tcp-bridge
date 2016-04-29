@@ -51,7 +51,6 @@ public class BridgeServer implements Runnable {
             logger.info("bridge server started: " + ss);
             while (true) {
                 Socket s = ss.accept();
-                s.setKeepAlive(true);
                 s.setSoTimeout(120000);
                 logger.info("bridge client connecting: " + s);
                 final Timer pingTimer = new Timer();

@@ -69,7 +69,6 @@ public class BridgeClient implements Runnable {
         Timer timer = new Timer();
         try {
             ss = new ServerSocket(localPort);
-            ss.setReuseAddress(true);
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
