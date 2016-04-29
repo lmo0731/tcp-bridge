@@ -231,11 +231,11 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 timers.getFirst().purge();
                 timers.removeFirst();
                 connectButton.setText("Connect");
+                startButton.setEnabled(false);
+                serverStatusLabel.setText("disconnected");
                 if (onDemandCheckBox.isSelected()) {
                     connectButtonActionPerformed(null);
                 }
-                startButton.setEnabled(false);
-                serverStatusLabel.setText("disconnected");
             }
 
             @Override
