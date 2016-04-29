@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
 public class BridgeClientForm extends javax.swing.JFrame {
 
     BridgeClient client = null;
-    Logger logger = Logger.getLogger("UI");
+    static Logger logger = Logger.getLogger("UI");
     boolean started = false;
 
     /**
@@ -290,8 +290,56 @@ public class BridgeClientForm extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         BasicConfigurator.configure();
-        if (args.length > 0) {
+        if (args.length == 1) {
             new BridgeServer(Integer.parseInt(args[0])).start();
+            return;
+        } else if (args.length == 7) {
+            final Timer timer = new Timer();
+            final BridgeClient client = new BridgeClient(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]), System.getProperty("user.name"));
+            client.setRemote(Integer.parseInt(args[3]), args[4], Integer.parseInt(args[5]), Integer.parseInt(args[6]));
+            client.setListener(new BridgeClientListener() {
+
+                @Override
+                public void onConnectionStart() {
+                    final long startMs = new Date().getTime();
+                    timer.schedule(new TimerTask() {
+
+                        @Override
+                        public void run() {
+                            long runtime = (new Date().getTime() - startMs) / 1000;
+                            long sec = runtime % 60;
+                            long min = runtime / 60 % 60;
+                            long hour = runtime / 60 / 60;
+                            logger.info(String.format("%d:%02d:%02d", hour, min, sec));
+                        }
+                    }, 0, 5000);
+                    logger.info("server connection started, starting local server");
+                    client.start();
+                }
+
+                @Override
+                public void onConnectionEnd() {
+                    timer.cancel();
+                    timer.purge();
+                    logger.info("server connection ended, starting again");
+                    client.connect();
+                }
+
+                @Override
+                public void onServerStart() {
+                    logger.info("local server started");
+                }
+
+                @Override
+                public void onServerEnd() {
+                    logger.info("local server ended, starting again");
+                    client.start();
+                }
+            });
+            client.connect();
+            return;
+        } else if (args.length > 0) {
+            logger.info("shost sport srcid dstid rhost rport lport");
             return;
         }
         /* Set the Nimbus look and feel */

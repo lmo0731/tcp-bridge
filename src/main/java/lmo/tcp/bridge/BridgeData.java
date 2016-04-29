@@ -33,6 +33,8 @@ public class BridgeData {
     public static final byte TYPE_RES = 4;
     public static final byte TYPE_OPEN_REQ = 5;
     public static final byte TYPE_OPEN_RES = 6;
+    public static final byte TYPE_PING = 7;
+    public static final byte TYPE_PONG = 8;
 
     public void write(OutputStream out) throws IOException {
         writeByte(out, (byte) '$');
@@ -149,6 +151,12 @@ public class BridgeData {
         }
         if (t == TYPE_START) {
             ret = "S";
+        }
+        if (t == TYPE_PING) {
+            ret = "P>";
+        }
+        if (t == TYPE_PONG) {
+            ret = "P<";
         }
         return ret;
     }

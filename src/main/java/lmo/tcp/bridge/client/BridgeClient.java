@@ -224,7 +224,7 @@ public class BridgeClient implements Runnable {
                         clientHandler.end();
                     }
                 } else if (data.dataType == BridgeData.TYPE_START) {
-                    logger.info("server connection success: ID=" + data.srcId);
+                    logger.info("server connection success: ID=" + data.dstId);
                     dataHandler.setSrcId(data.srcId);
                     if (serverConnection != null) {
                         logger.warn("another server connection already exists. closing this connection");
@@ -233,6 +233,14 @@ public class BridgeClient implements Runnable {
                         serverConnection = dataHandler;
                         listener.onConnectionStart();
                     }
+                } else if (data.dataType == BridgeData.TYPE_PING) {
+                    BridgeData d = new BridgeData();
+                    d.dataType = BridgeData.TYPE_PONG;
+                    d.data = new byte[0];
+                    d.dataLen = d.data.length;
+                    serverConnection.send(d);
+                } else {
+                    logger.warn("unknown datatype: " + data.dataType);
                 }
             }
 

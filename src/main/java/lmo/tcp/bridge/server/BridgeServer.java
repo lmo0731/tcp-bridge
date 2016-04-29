@@ -51,8 +51,10 @@ public class BridgeServer implements Runnable {
             logger.info("bridge server started: " + ss);
             while (true) {
                 Socket s = ss.accept();
+                s.setKeepAlive(true);
+                s.setSoTimeout(120000);
                 logger.info("bridge client connecting: " + s);
-
+                final Timer pingTimer = new Timer();
                 final BridgeDataHandler dataHandler = new BridgeDataHandler(s);
                 dataHandler.setListener(new BridgeDataListener() {
 
@@ -71,11 +73,31 @@ public class BridgeServer implements Runnable {
                                 logger.info("bridge client connected: " + dataHandler.id);
                                 clients.put(dataHandler.id, dataHandler);
                                 dataHandler.send(d);
+                                pingTimer.schedule(new TimerTask() {
+
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            BridgeData d = new BridgeData();
+                                            d.dataType = BridgeData.TYPE_PING;
+                                            d.data = new byte[0];
+                                            d.dataLen = d.data.length;
+                                            dataHandler.send(d);
+                                        } catch (Exception ex) {
+                                            logger.error("ping fail: " + dataHandler.id);
+                                        }
+                                    }
+                                }, 30000, 30000);
                             } else {
                                 logger.info("bridge client id already exists: " + d.srcId);
                                 dataHandler.end();
                             }
-                        } else {
+                        } else if (d.dataType == BridgeData.TYPE_CLOSE_REQ
+                                || d.dataType == BridgeData.TYPE_CLOSE_RES
+                                || d.dataType == BridgeData.TYPE_OPEN_REQ
+                                || d.dataType == BridgeData.TYPE_OPEN_RES
+                                || d.dataType == BridgeData.TYPE_REQ
+                                || d.dataType == BridgeData.TYPE_RES) {
                             BridgeDataHandler client = clients.get(d.dstId);
                             if (client != null) {
                                 client.send(d);
@@ -104,6 +126,8 @@ public class BridgeServer implements Runnable {
                             logger.info("bridge client disconnected: " + dataHandler.id);
                             clients.remove(dataHandler.id);
                         }
+                        pingTimer.cancel();
+                        pingTimer.purge();
                     }
 
                     @Override
