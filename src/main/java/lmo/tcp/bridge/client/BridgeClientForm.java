@@ -219,7 +219,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                         serverStatusLabel.setText(String.format("%d:%02d:%02d", hour, min, sec));
                     }
                 }, 0, 1000);
-                timers.add(timer);
+                timers.addLast(timer);
                 if (onDemandCheckBox.isSelected() && started) {
                     startButtonActionPerformed(null);
                 }
@@ -229,6 +229,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
             public void onConnectionEnd() {
                 timers.getFirst().cancel();
                 timers.getFirst().purge();
+                timers.removeFirst();
                 connectButton.setText("Connect");
                 if (onDemandCheckBox.isSelected()) {
                     connectButtonActionPerformed(null);
@@ -315,7 +316,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                             logger.info(String.format("%d:%02d:%02d", hour, min, sec));
                         }
                     }, 0, 5000);
-                    timers.add(timer);
+                    timers.addLast(timer);
                     logger.info("server connection started, starting local server");
                     client.start();
                 }
@@ -324,6 +325,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 public void onConnectionEnd() {
                     timers.getFirst().cancel();
                     timers.getFirst().purge();
+                    timers.removeFirst();
                     logger.info("server connection ended, starting again");
                     client.connect();
                 }
