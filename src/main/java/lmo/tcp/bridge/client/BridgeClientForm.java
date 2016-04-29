@@ -223,14 +223,14 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
             @Override
             public void onConnectionEnd() {
+                timer.cancel();
+                timer.purge();
                 connectButton.setText("Connect");
                 if (onDemandCheckBox.isSelected()) {
                     connectButtonActionPerformed(null);
                 }
                 startButton.setEnabled(false);
                 serverStatusLabel.setText("disconnected");
-                timer.cancel();
-                timer.purge();
             }
 
             @Override
@@ -242,9 +242,6 @@ public class BridgeClientForm extends javax.swing.JFrame {
             @Override
             public void onServerEnd() {
                 startButton.setText("Start");
-                if (onDemandCheckBox.isSelected() && started) {
-                    startButtonActionPerformed(null);
-                }
                 clientStatusField.setText("remote connection ended");
             }
         };
