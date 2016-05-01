@@ -78,6 +78,9 @@ public class BridgeClientForm extends javax.swing.JFrame {
         public void onServerEnd() {
             startButton.setText("Start");
             clientStatusField.setText("remote connection ended");
+            if (onDemandCheckBox.isSelected() && started) {
+                startButtonActionPerformed(null);
+            }
         }
 
         @Override
@@ -350,6 +353,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 @Override
                 public void onServerEnd() {
                     logger.info("local server ended");
+                    client.start();
                 }
 
                 @Override
