@@ -19,4 +19,6 @@ public interface BridgeClientListener {
 
     public void onServerEnd();
 
+    public void onError(String msg, Exception ex);
+
 }

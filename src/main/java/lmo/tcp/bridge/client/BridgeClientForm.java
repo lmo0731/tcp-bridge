@@ -24,6 +24,67 @@ public class BridgeClientForm extends javax.swing.JFrame {
     BridgeClient client = null;
     static Logger logger = Logger.getLogger("UI");
     boolean started = false;
+    final LinkedList<Timer> timers = new LinkedList<>();
+
+    BridgeClientListener listener = new BridgeClientListener() {
+
+        @Override
+        public void onConnectionStart() {
+            connectButton.setText("Disconnect");
+            startButton.setEnabled(true);
+            serverStatusLabel.setText("connected");
+            final long startMs = new Date().getTime();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+
+                @Override
+                public void run() {
+                    long runtime = (new Date().getTime() - startMs) / 1000;
+                    long sec = runtime % 60;
+                    long min = runtime / 60 % 60;
+                    long hour = runtime / 60 / 60;
+                    serverStatusLabel.setText(String.format("%d:%02d:%02d", hour, min, sec));
+                }
+            }, 0, 1000);
+            timers.addLast(timer);
+            if (onDemandCheckBox.isSelected() && started) {
+                startButtonActionPerformed(null);
+            }
+        }
+
+        @Override
+        public void onConnectionEnd() {
+            try {
+                timers.getFirst().cancel();
+                timers.getFirst().purge();
+                timers.removeFirst();
+            } catch (Exception ex) {
+            }
+            connectButton.setText("Connect");
+            startButton.setEnabled(false);
+            serverStatusLabel.setText("disconnected");
+            if (onDemandCheckBox.isSelected()) {
+                connectButtonActionPerformed(null);
+            }
+        }
+
+        @Override
+        public void onServerStart() {
+            startButton.setText("Stop");
+            clientStatusField.setText("remote connection started");
+        }
+
+        @Override
+        public void onServerEnd() {
+            startButton.setText("Start");
+            clientStatusField.setText("remote connection ended");
+        }
+
+        @Override
+        public void onError(String msg, Exception ex) {
+            logger.error(msg, ex);
+        }
+    };
 
     /**
      * Creates new form BridgeClientForm
@@ -197,59 +258,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
-        final LinkedList<Timer> timers = new LinkedList<>();
 
-        BridgeClientListener listener = new BridgeClientListener() {
-
-            @Override
-            public void onConnectionStart() {
-                connectButton.setText("Disconnect");
-                startButton.setEnabled(true);
-                serverStatusLabel.setText("connected");
-                final long startMs = new Date().getTime();
-                Timer timer = new Timer();
-                timer.schedule(new TimerTask() {
-
-                    @Override
-                    public void run() {
-                        long runtime = (new Date().getTime() - startMs) / 1000;
-                        long sec = runtime % 60;
-                        long min = runtime / 60 % 60;
-                        long hour = runtime / 60 / 60;
-                        serverStatusLabel.setText(String.format("%d:%02d:%02d", hour, min, sec));
-                    }
-                }, 0, 1000);
-                timers.addLast(timer);
-                if (onDemandCheckBox.isSelected() && started) {
-                    startButtonActionPerformed(null);
-                }
-            }
-
-            @Override
-            public void onConnectionEnd() {
-                timers.getFirst().cancel();
-                timers.getFirst().purge();
-                timers.removeFirst();
-                connectButton.setText("Connect");
-                startButton.setEnabled(false);
-                serverStatusLabel.setText("disconnected");
-                if (onDemandCheckBox.isSelected()) {
-                    connectButtonActionPerformed(null);
-                }
-            }
-
-            @Override
-            public void onServerStart() {
-                startButton.setText("Stop");
-                clientStatusField.setText("remote connection started");
-            }
-
-            @Override
-            public void onServerEnd() {
-                startButton.setText("Start");
-                clientStatusField.setText("remote connection ended");
-            }
-        };
         if (client != null && client.isConnected()) {
             client.disconnect();
         } else {
@@ -323,9 +332,12 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
                 @Override
                 public void onConnectionEnd() {
-                    timers.getFirst().cancel();
-                    timers.getFirst().purge();
-                    timers.removeFirst();
+                    try {
+                        timers.getFirst().cancel();
+                        timers.getFirst().purge();
+                        timers.removeFirst();
+                    } catch (Exception ex) {
+                    }
                     logger.info("server connection ended, starting again");
                     client.connect();
                 }
@@ -339,6 +351,12 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 public void onServerEnd() {
                     logger.info("local server ended");
                 }
+
+                @Override
+                public void onError(String msg, Exception ex) {
+                    logger.error(msg, ex);
+                }
+
             });
             client.connect();
             return;

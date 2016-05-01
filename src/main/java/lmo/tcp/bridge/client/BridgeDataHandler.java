@@ -8,9 +8,9 @@ package lmo.tcp.bridge.client;
 import java.io.InputStream;
 import java.net.Socket;
 import lmo.tcp.bridge.BridgeData;
-import lmo.tcp.bridge.BridgeDataException;
 import lmo.tcp.bridge.listener.BridgeDataListener;
 import lmo.tcp.bridge.listener.impl.DefaultBridgeDataListener;
+import lmo.tcp.bridge.server.BridgeServer;
 
 /**
  *
@@ -37,16 +37,12 @@ public class BridgeDataHandler implements Runnable {
     public void run() {
         try {
             socket = new Socket(host, port);
-            socket.setSoTimeout(120000);
+            socket.setSoTimeout(BridgeServer.SO_TIMEOUT);
             listener.onConnect();
             InputStream in = socket.getInputStream();
             while (true) {
-                try {
-                    BridgeData d = BridgeData.read(in);
-                    listener.onRead(d);
-                } catch (BridgeDataException ex) {
-                    listener.onError("bridge error", ex);
-                }
+                BridgeData d = BridgeData.read(in);
+                listener.onRead(d);
             }
         } catch (Exception ex) {
             listener.onError("server connection error", ex);

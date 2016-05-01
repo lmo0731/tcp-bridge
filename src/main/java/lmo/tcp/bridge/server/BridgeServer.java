@@ -21,6 +21,9 @@ import org.apache.log4j.Logger;
  */
 public class BridgeServer implements Runnable {
 
+    public static final int SO_TIMEOUT = 15000;
+    public static final int PING_DELAY = 10000;
+
     final Logger logger;
     int port;
     ServerSocket ss;
@@ -50,7 +53,7 @@ public class BridgeServer implements Runnable {
             logger.info("bridge server started: " + ss);
             while (true) {
                 Socket s = ss.accept();
-                s.setSoTimeout(120000);
+                s.setSoTimeout(BridgeServer.SO_TIMEOUT);
                 logger.info("bridge client connecting: " + s);
                 final Timer pingTimer = new Timer();
                 final BridgeDataHandler dataHandler = new BridgeDataHandler(s);
@@ -85,7 +88,7 @@ public class BridgeServer implements Runnable {
                                             logger.error("ping fail: " + dataHandler.id);
                                         }
                                     }
-                                }, 30000, 30000);
+                                }, BridgeServer.PING_DELAY, BridgeServer.PING_DELAY);
                             } else {
                                 logger.info("bridge client id already exists: " + d.srcId);
                                 dataHandler.end();
