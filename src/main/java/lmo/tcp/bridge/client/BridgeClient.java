@@ -242,12 +242,18 @@ public class BridgeClient implements Runnable {
                         if (serverHandler != null) {
                             serverHandler.end();
                         }
+                        if (data.dataLen > 0) {
+                            listener.onError(new String(data.data), null);
+                        }
                     } else if (data.dataType == BridgeData.TYPE_CLOSE_RES) {
                         logger.info("closing client: " + data.dstPort);
                         TcpDataHandler clientHandler = clients.get(data.dstPort);
                         if (clientHandler != null) {
                             clientHandler.ready();
                             clientHandler.end();
+                        }
+                        if (data.dataLen > 0) {
+                            listener.onError(new String(data.data), null);
                         }
                     } else if (data.dataType == BridgeData.TYPE_START) {
                         logger.info("server connection success: ID=" + data.dstId);

@@ -86,6 +86,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
         @Override
         public void onError(String msg, Exception ex) {
             logger.error(msg, ex);
+            clientStatusField.setText(msg);
         }
     };
 
