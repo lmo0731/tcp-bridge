@@ -139,7 +139,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
         serverLabel.setText("Bridge Server");
 
-        serverField.setText("103.9.89.165:1783");
+        serverField.setText("localhost:1783");
 
         jLabel2.setText("Remote Server");
 

@@ -8,6 +8,7 @@ package lmo.tcp.bridge.client;
 import lmo.tcp.bridge.listener.BridgeClientListener;
 import lmo.tcp.bridge.listener.TcpDataListener;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -236,13 +237,16 @@ public class BridgeClient implements Runnable {
                             throw new BridgeCloseReqException("destination not found");
                         }
                     } else if (data.dataType == BridgeData.TYPE_CLOSE_REQ) {
+                        logger.info("closing server: " + data.dstPort);
                         TcpDataHandler serverHandler = servers.get(data.dstPort);
                         if (serverHandler != null) {
                             serverHandler.end();
                         }
                     } else if (data.dataType == BridgeData.TYPE_CLOSE_RES) {
+                        logger.info("closing client: " + data.dstPort);
                         TcpDataHandler clientHandler = clients.get(data.dstPort);
                         if (clientHandler != null) {
+                            clientHandler.ready();
                             clientHandler.end();
                         }
                     } else if (data.dataType == BridgeData.TYPE_START) {
@@ -291,6 +295,7 @@ public class BridgeClient implements Runnable {
             @Override
             public void onDisconnect() {
                 for (TcpDataHandler h : clients.values()) {
+                    h.ready();
                     h.end();
                 }
                 for (TcpDataHandler h : servers.values()) {
@@ -319,7 +324,8 @@ public class BridgeClient implements Runnable {
             throw new BridgeDataException("password mismatch");
         }
         logger.info("connecting to " + host + ":" + port);
-        Socket s = new Socket(host, port);
+        Socket s = new Socket();
+        s.connect(new InetSocketAddress(host, port), 1000);
         final TcpDataHandler dataHandler = new TcpDataHandler(s, s.getLocalPort());
         final Logger logger = Logger.getLogger("app." + dataHandler.id);
         dataHandler.setListener(new TcpDataListener() {
