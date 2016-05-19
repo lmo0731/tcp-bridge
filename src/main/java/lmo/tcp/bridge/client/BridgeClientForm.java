@@ -145,7 +145,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
 
         serverLabel.setText("Bridge Server");
 
-        serverField.setText("localhost:1783");
+        serverField.setText("103.9.89.165:1783");
 
         jLabel2.setText("Remote Server");
 
@@ -330,20 +330,15 @@ public class BridgeClientForm extends javax.swing.JFrame {
      */
     public static void main(String args[]) throws IOException {
         BasicConfigurator.configure();
-        if (args.length > 1) {
-            PropertyConfigurator.configure(args[0]);
-            boolean server = false;
-            try {
-                ConfigLoader.load(BridgeClientConfig.class, args[0]);
-            } catch (Exception ex) {
-                logger.error("client config", ex);
-                ConfigLoader.load(BridgeServerConfig.class, args[0]);
-                server = true;
-            }
-            if (server) {
+        if (args.length == 2) {
+            PropertyConfigurator.configure(args[1]);
+            String mode = args[0];
+            if (mode.equals("server")) {
+                ConfigLoader.load(BridgeServerConfig.class, args[1]);
                 new BridgeServer(BridgeServerConfig.port).start();
                 return;
-            } else if (args.length == 9) {
+            } else if (mode.equals("client")) {
+                ConfigLoader.load(BridgeClientConfig.class, args[1]);
                 final LinkedList<Timer> timers = new LinkedList<>();
                 final BridgeClient client = new BridgeClient(
                         BridgeClientConfig.shost, BridgeClientConfig.sport,
@@ -403,7 +398,12 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 });
                 client.connect();
                 return;
+            } else {
+                logger.info("mode is invalid: server or client");
             }
+        } else if (args.length > 0) {
+            logger.info("args format invalid: mode config");
+            return;
         }
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
