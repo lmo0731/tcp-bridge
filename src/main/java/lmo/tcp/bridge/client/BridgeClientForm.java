@@ -393,7 +393,9 @@ public class BridgeClientForm extends javax.swing.JFrame {
                     @Override
                     public void onServerEnd() {
                         logger.info("local server ended");
-                        client.start();
+                        if (client.isConnected()) {
+                            client.start();
+                        }
                     }
 
                     @Override
