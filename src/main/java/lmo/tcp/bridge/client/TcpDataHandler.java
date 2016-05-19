@@ -41,11 +41,11 @@ public class TcpDataHandler implements Runnable {
         this.dstPort = dstPort;
     }
 
-    public void waitReady() {
+    public void waitReady(long ms) {
         if (!ready) {
             synchronized (this) {
                 try {
-                    wait();
+                    wait(ms);
                 } catch (InterruptedException ex) {
                 }
             }
@@ -54,8 +54,13 @@ public class TcpDataHandler implements Runnable {
 
     public void ready() {
         synchronized (this) {
+            ready = true;
             notify();
         }
+    }
+
+    public boolean isReady() {
+        return ready;
     }
 
     @Override

@@ -1,0 +1,14 @@
+#bridge server config
+shost=103.9.89.165
+sport=1783
+
+#local config
+port=13000
+srcid=2
+srcpass=test
+
+#remote config
+dstid=2
+dstpass=test
+rhost=localhost
+rport=3389

@@ -5,15 +5,20 @@
  */
 package lmo.tcp.bridge.client;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
+import lmo.tcp.bridge.BridgeClientConfig;
+import lmo.tcp.bridge.BridgeServerConfig;
+import lmo.tcp.bridge.conf.ConfigLoader;
 import lmo.tcp.bridge.listener.BridgeClientListener;
 import lmo.tcp.bridge.server.BridgeServer;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
@@ -323,68 +328,81 @@ public class BridgeClientForm extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         BasicConfigurator.configure();
         if (args.length == 1) {
-            new BridgeServer(Integer.parseInt(args[0])).start();
-            return;
-        } else if (args.length == 9) {
-            final LinkedList<Timer> timers = new LinkedList<>();
-            final BridgeClient client = new BridgeClient(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]), System.getProperty("user.name"), args[3]);
-            client.setRemote(Integer.parseInt(args[4]), args[6], Integer.parseInt(args[7]), args[5], Integer.parseInt(args[8]));
-            client.setListener(new BridgeClientListener() {
+            PropertyConfigurator.configure(args[0]);
+            boolean server = false;
+            try {
+                ConfigLoader.load(BridgeClientConfig.class, args[0]);
+            } catch (Exception ex) {
+                ConfigLoader.load(BridgeServerConfig.class, args[0]);
+                server = true;
+            }
+            if (server) {
+                new BridgeServer(BridgeServerConfig.port).start();
+                return;
+            } else if (args.length == 9) {
+                final LinkedList<Timer> timers = new LinkedList<>();
+                final BridgeClient client = new BridgeClient(
+                        BridgeClientConfig.shost, BridgeClientConfig.sport,
+                        BridgeClientConfig.srcid, System.getProperty("user.name"), BridgeClientConfig.srcpass);
+                client.setRemote(BridgeClientConfig.dstid, BridgeClientConfig.rhost, BridgeClientConfig.rport, BridgeClientConfig.dstpass,
+                        BridgeClientConfig.port);
+                client.setListener(new BridgeClientListener() {
 
-                @Override
-                public void onConnectionStart() {
-                    final long startMs = new Date().getTime();
-                    Timer timer = new Timer();
-                    timer.schedule(new TimerTask() {
+                    @Override
+                    public void onConnectionStart() {
+                        final long startMs = new Date().getTime();
+                        Timer timer = new Timer();
+                        timer.schedule(new TimerTask() {
 
-                        @Override
-                        public void run() {
-                            long runtime = (new Date().getTime() - startMs) / 1000;
-                            long sec = runtime % 60;
-                            long min = runtime / 60 % 60;
-                            long hour = runtime / 60 / 60;
-                            logger.info(String.format("%d:%02d:%02d", hour, min, sec));
-                        }
-                    }, 0, 5000);
-                    timers.addLast(timer);
-                    logger.info("server connection started, starting local server");
-                    client.start();
-                }
-
-                @Override
-                public void onConnectionEnd() {
-                    try {
-                        timers.getFirst().cancel();
-                        timers.getFirst().purge();
-                        timers.removeFirst();
-                    } catch (Exception ex) {
+                            @Override
+                            public void run() {
+                                long runtime = (new Date().getTime() - startMs) / 1000;
+                                long sec = runtime % 60;
+                                long min = runtime / 60 % 60;
+                                long hour = runtime / 60 / 60;
+                                logger.info(String.format("%d:%02d:%02d", hour, min, sec));
+                            }
+                        }, 0, 5000);
+                        timers.addLast(timer);
+                        logger.info("server connection started, starting local server");
+                        client.start();
                     }
-                    logger.info("server connection ended, starting again");
-                    client.connect();
-                }
 
-                @Override
-                public void onServerStart() {
-                    logger.info("local server started");
-                }
+                    @Override
+                    public void onConnectionEnd() {
+                        try {
+                            timers.getFirst().cancel();
+                            timers.getFirst().purge();
+                            timers.removeFirst();
+                        } catch (Exception ex) {
+                        }
+                        logger.info("server connection ended, starting again");
+                        client.connect();
+                    }
 
-                @Override
-                public void onServerEnd() {
-                    logger.info("local server ended");
-                    client.start();
-                }
+                    @Override
+                    public void onServerStart() {
+                        logger.info("local server started");
+                    }
 
-                @Override
-                public void onError(String msg, Exception ex) {
-                    logger.error(msg, ex);
-                }
+                    @Override
+                    public void onServerEnd() {
+                        logger.info("local server ended");
+                        client.start();
+                    }
 
-            });
-            client.connect();
-            return;
+                    @Override
+                    public void onError(String msg, Exception ex) {
+                        logger.error(msg, ex);
+                    }
+
+                });
+                client.connect();
+                return;
+            }
         } else if (args.length > 0) {
             //            0      1     2     3      4       5        6   7   8
             logger.info("shost sport srcid srcpass dstid dstpass rhost rport lport");
@@ -420,7 +438,6 @@ public class BridgeClientForm extends javax.swing.JFrame {
             }
         });
     }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel clientStatusField;
     private javax.swing.JButton connectButton;

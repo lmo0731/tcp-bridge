@@ -126,7 +126,10 @@ public class BridgeClient implements Runnable {
                         d.dataLen = d.data.length;
                         serverConnection.send(d);
                         logger.info("waiting for ready");
-                        dataHandler.waitReady();
+                        dataHandler.waitReady(10000);
+                        if (!dataHandler.isReady()) {
+                            dataHandler.end();
+                        }
                     }
 
                     @Override
