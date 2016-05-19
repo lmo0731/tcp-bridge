@@ -41,7 +41,7 @@ public class BridgeServer implements Runnable {
 
     @Override
     public void run() {
-        Timer timer = new Timer();
+        Timer timer = new Timer("Timer-Server-" + port + "-" + Math.random());
         try {
             ss = new ServerSocket(port);
             timer.schedule(new TimerTask() {
@@ -55,7 +55,7 @@ public class BridgeServer implements Runnable {
                 Socket s = ss.accept();
                 s.setSoTimeout(BridgeServer.SO_TIMEOUT);
                 logger.info("bridge client connecting: " + s);
-                final Timer pingTimer = new Timer();
+                final Timer pingTimer = new Timer("Timer-Ping-" + s);
                 final BridgeDataHandler dataHandler = new BridgeDataHandler(s);
                 dataHandler.setListener(new BridgeDataListener() {
 
@@ -127,8 +127,14 @@ public class BridgeServer implements Runnable {
                             logger.info("bridge client disconnected: " + dataHandler.id);
                             clients.remove(dataHandler.id);
                         }
-                        pingTimer.cancel();
-                        pingTimer.purge();
+                        try {
+                            pingTimer.cancel();
+                        } catch (Exception ex) {
+                        }
+                        try {
+                            pingTimer.purge();
+                        } catch (Exception ex) {
+                        }
                     }
 
                     @Override
@@ -147,14 +153,20 @@ public class BridgeServer implements Runnable {
             }
             try {
                 timer.cancel();
+            } catch (Exception ex) {
+            }
+            try {
                 timer.purge();
             } catch (Exception ex) {
+            }
+            for (BridgeDataHandler handler : clients.values()) {
+                handler.end();
             }
             logger.info("bridge server stopped");
         }
     }
 
     public void start() {
-        new Thread(this).start();
+        new Thread(this, "BridgeServer-" + port).start();
     }
 }

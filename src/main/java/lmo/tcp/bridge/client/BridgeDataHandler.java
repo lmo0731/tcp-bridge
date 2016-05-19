@@ -73,7 +73,7 @@ public class BridgeDataHandler implements Runnable {
     }
 
     public void start() {
-        new Thread(this).start();
+        new Thread(this, "BridgeDataHandler-" + host + ":" + port).start();
     }
 
     public void end() {

@@ -74,7 +74,7 @@ public class BridgeClient implements Runnable {
 
     @Override
     public void run() {
-        Timer timer = new Timer();
+        Timer timer = new Timer("Timer-Client-" + localPort + "-" + Math.random());
         try {
             ss = new ServerSocket(localPort);
             timer.schedule(new TimerTask() {
@@ -152,7 +152,7 @@ public class BridgeClient implements Runnable {
                     }
 
                 });
-                new Thread(dataHandler).start();
+                dataHandler.start();
             }
         } catch (Exception ex) {
             logger.error("bridge client error", ex);
@@ -167,8 +167,15 @@ public class BridgeClient implements Runnable {
             }
             try {
                 timer.cancel();
+            } catch (Exception ex) {
+            }
+            try {
                 timer.purge();
             } catch (Exception ex) {
+            }
+            for (TcpDataHandler h : clients.values()) {
+                h.ready();
+                h.end();
             }
             listener.onServerEnd();
         }
@@ -202,7 +209,7 @@ public class BridgeClient implements Runnable {
             }
 
             @Override
-            public void onRead(BridgeData data) throws Exception {
+            public void onRead(BridgeData data) {
                 logger.info("data from server: " + data);
                 try {
                     if (data.dataType == BridgeData.TYPE_OPEN_REQ) {
@@ -217,43 +224,45 @@ public class BridgeClient implements Runnable {
                             throw new BridgeCloseResException(ex.getMessage());
                         }
                     } else if (data.dataType == BridgeData.TYPE_OPEN_RES) {
-                        TcpDataHandler handler = clients.get(data.dstPort);
-                        if (handler != null) {
+                        try {
+                            TcpDataHandler handler = clients.get(data.dstPort);
                             handler.setDstPort(data.srcPort);
                             handler.ready();
                             logger.info("ready to go");
-                        } else {
+                        } catch (Exception ex) {
                             throw new BridgeCloseReqException("destination not found");
                         }
                     } else if (data.dataType == BridgeData.TYPE_REQ) {
-                        TcpDataHandler handler = servers.get(data.dstPort);
-                        if (handler != null) {
+                        try {
+                            TcpDataHandler handler = servers.get(data.dstPort);
                             handler.send(data.data);
-                        } else {
+                        } catch (Exception ex) {
                             throw new BridgeCloseResException("destination not found");
                         }
                     } else if (data.dataType == BridgeData.TYPE_RES) {
-                        TcpDataHandler handler = clients.get(data.dstPort);
-                        if (handler != null) {
+                        try {
+                            TcpDataHandler handler = clients.get(data.dstPort);
                             handler.send(data.data);
-                        } else {
+                        } catch (Exception ex) {
                             throw new BridgeCloseReqException("destination not found");
                         }
                     } else if (data.dataType == BridgeData.TYPE_CLOSE_REQ) {
-                        logger.info("closing server: " + data.dstPort);
-                        TcpDataHandler serverHandler = servers.get(data.dstPort);
-                        if (serverHandler != null) {
-                            serverHandler.end();
+                        try {
+                            logger.info("closing server: " + data.dstPort);
+                            TcpDataHandler handler = servers.get(data.dstPort);
+                            handler.end();
+                        } catch (Exception ex) {
                         }
                         if (data.dataLen > 0) {
                             listener.onError(new String(data.data), null);
                         }
                     } else if (data.dataType == BridgeData.TYPE_CLOSE_RES) {
-                        logger.info("closing client: " + data.dstPort);
-                        TcpDataHandler clientHandler = clients.get(data.dstPort);
-                        if (clientHandler != null) {
-                            clientHandler.ready();
-                            clientHandler.end();
+                        try {
+                            logger.info("closing client: " + data.dstPort);
+                            TcpDataHandler handler = clients.get(data.dstPort);
+                            handler.ready();
+                            handler.end();
+                        } catch (Exception ex) {
                         }
                         if (data.dataLen > 0) {
                             listener.onError(new String(data.data), null);
@@ -293,6 +302,8 @@ public class BridgeClient implements Runnable {
                     d.data = (ex.getMessage() == null ? "" : ex.getMessage()).getBytes();
                     d.dataLen = d.data.length;
                     serverConnection.send(d);
+                } catch (Exception ex) {
+                    logger.fatal("unknown state", ex);
                 }
             }
 
@@ -395,7 +406,7 @@ public class BridgeClient implements Runnable {
     }
 
     public void start() {
-        new Thread(this).start();
+        new Thread(this, "BridgeClient-" + this.localPort).start();
     }
 
     public void stop() {

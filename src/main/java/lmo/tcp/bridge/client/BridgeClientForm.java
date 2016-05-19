@@ -39,7 +39,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
             startButton.setEnabled(true);
             serverStatusLabel.setText("connected");
             final long startMs = new Date().getTime();
-            Timer timer = new Timer();
+            Timer timer = new Timer("Timer-UI." + Math.random());
             timer.schedule(new TimerTask() {
 
                 @Override
@@ -61,7 +61,13 @@ public class BridgeClientForm extends javax.swing.JFrame {
         public void onConnectionEnd() {
             try {
                 timers.getFirst().cancel();
+            } catch (Exception ex) {
+            }
+            try {
                 timers.getFirst().purge();
+            } catch (Exception ex) {
+            }
+            try {
                 timers.removeFirst();
             } catch (Exception ex) {
             }
@@ -350,7 +356,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                     @Override
                     public void onConnectionStart() {
                         final long startMs = new Date().getTime();
-                        Timer timer = new Timer();
+                        Timer timer = new Timer("Timer-UI." + Math.random());
                         timer.schedule(new TimerTask() {
 
                             @Override
