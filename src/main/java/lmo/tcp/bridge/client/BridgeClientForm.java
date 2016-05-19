@@ -52,7 +52,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 }
             }, 0, 1000);
             timers.addLast(timer);
-            if (onDemandCheckBox.isSelected() && started) {
+            if (onDemandCheckBox.isSelected() && started && client.isConnected()) {
                 startButtonActionPerformed(null);
             }
         }
