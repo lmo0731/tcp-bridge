@@ -12,3 +12,16 @@ dstid=2
 dstpass=test
 rhost=localhost
 rport=3389
+
+log4j.rootLogger=ALL, R, F
+
+log4j.appender.R=org.apache.log4j.ConsoleAppender
+log4j.appender.R.layout=org.apache.log4j.PatternLayout
+log4j.appender.R.layout.conversionPattern=%r [%t] %p %c: %m%n
+log4j.appender.F=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.F.file=logs/client.log
+log4j.appender.F.layout=org.apache.log4j.PatternLayout
+log4j.appender.F.encoding=UTF-8
+log4j.appender.F.DatePattern='.'yyyy-MM-dd'.log'
+log4j.appender.F.layout.conversionPattern=[%-5p][%d{HH:mm:ss,SSS}][%c][%t]: %m%n
+log4j.appender.F.append=true

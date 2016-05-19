@@ -330,12 +330,13 @@ public class BridgeClientForm extends javax.swing.JFrame {
      */
     public static void main(String args[]) throws IOException {
         BasicConfigurator.configure();
-        if (args.length == 1) {
+        if (args.length > 1) {
             PropertyConfigurator.configure(args[0]);
             boolean server = false;
             try {
                 ConfigLoader.load(BridgeClientConfig.class, args[0]);
             } catch (Exception ex) {
+                logger.error("client config", ex);
                 ConfigLoader.load(BridgeServerConfig.class, args[0]);
                 server = true;
             }
@@ -403,10 +404,6 @@ public class BridgeClientForm extends javax.swing.JFrame {
                 client.connect();
                 return;
             }
-        } else if (args.length > 0) {
-            //            0      1     2     3      4       5        6   7   8
-            logger.info("shost sport srcid srcpass dstid dstpass rhost rport lport");
-            return;
         }
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
