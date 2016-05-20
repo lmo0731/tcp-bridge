@@ -406,7 +406,9 @@ public class BridgeClient implements Runnable {
     }
 
     public void start() {
-        new Thread(this, "BridgeClient-" + this.localPort).start();
+        if (isConnected()) {
+            new Thread(this, "BridgeClient-" + this.localPort).start();
+        }
     }
 
     public void stop() {
