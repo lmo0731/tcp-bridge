@@ -94,7 +94,7 @@ public class BridgeClient implements Runnable {
                 dataHandler.setListener(new TcpDataListener() {
 
                     @Override
-                    public void onRead(int id, int seq, byte[] b) {
+                    public void onRead(int id, int seq, byte[] b) throws Exception {
                         logger.info("client request: " + b.length);
                         BridgeData d = new BridgeData();
                         d.srcPort = id;
@@ -114,7 +114,7 @@ public class BridgeClient implements Runnable {
                     }
 
                     @Override
-                    public void onStart(int id) {
+                    public void onStart(int id) throws Exception {
                         logger.info("client start: " + id);
                         clients.put(id, dataHandler);
                         BridgeData d = new BridgeData();
@@ -133,7 +133,7 @@ public class BridgeClient implements Runnable {
                     }
 
                     @Override
-                    public void onEnd(int id) {
+                    public void onEnd(int id) throws Exception {
                         logger.info("client end: " + id);
                         clients.remove(id);
                         BridgeData d = new BridgeData();
@@ -197,7 +197,7 @@ public class BridgeClient implements Runnable {
         dataHandler.setListener(new BridgeDataListener() {
 
             @Override
-            public void onConnect() {
+            public void onConnect() throws Exception {
                 logger.info("connected to server");
                 BridgeData d = new BridgeData();
                 d.srcId = srcId;
@@ -209,7 +209,7 @@ public class BridgeClient implements Runnable {
             }
 
             @Override
-            public void onRead(BridgeData data) {
+            public void onRead(BridgeData data) throws Exception {
                 logger.info("data from server: " + data);
                 try {
                     if (data.dataType == BridgeData.TYPE_OPEN_REQ) {
@@ -303,7 +303,7 @@ public class BridgeClient implements Runnable {
                     d.dataLen = d.data.length;
                     serverConnection.send(d);
                 } catch (Exception ex) {
-                    logger.fatal("unknown state", ex);
+                    throw ex;
                 }
             }
 
