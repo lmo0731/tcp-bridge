@@ -173,9 +173,12 @@ public class BridgeClient implements Runnable {
                 timer.purge();
             } catch (Exception ex) {
             }
-            for (TcpDataHandler h : clients.values()) {
-                h.ready();
-                h.end();
+            try {
+                for (TcpDataHandler h : clients.values()) {
+                    h.ready();
+                    h.end();
+                }
+            } catch (Exception ex) {
             }
             listener.onServerEnd();
         }
@@ -314,18 +317,17 @@ public class BridgeClient implements Runnable {
 
             @Override
             public void onDisconnect() {
-                for (TcpDataHandler h : clients.values()) {
-                    h.ready();
-                    h.end();
-                }
                 for (TcpDataHandler h : servers.values()) {
-                    h.end();
+                    try {
+                        h.end();
+                    } catch (Exception ex) {
+                    }
                 }
                 logger.info("disconnected from server: " + serverConnection);
                 if (serverConnection == dataHandler || serverConnection == null) {
                     serverConnection = null;
-                    listener.onConnectionEnd();
                     stop();
+                    listener.onConnectionEnd();
                 } else {
                     logger.info("server connection established: " + serverConnection);
                 }
