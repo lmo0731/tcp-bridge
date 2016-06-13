@@ -128,6 +128,7 @@ public class BridgeClient implements Runnable {
                         logger.info("waiting for ready");
                         dataHandler.waitReady(10000);
                         if (!dataHandler.isReady()) {
+                            dataHandler.ready();
                             dataHandler.end();
                         }
                     }
@@ -191,7 +192,7 @@ public class BridgeClient implements Runnable {
     public synchronized void connect() {
         final Logger logger = Logger.getLogger("server." + serverHost + "." + serverPort);
         logger.info("connecting to server");
-        if (serverConnection != null) {
+        if (isConnected()) {
             logger.info("already connected to server");
             return;
         }
@@ -273,7 +274,7 @@ public class BridgeClient implements Runnable {
                     } else if (data.dataType == BridgeData.TYPE_START) {
                         logger.info("server connection success: ID=" + data.dstId);
                         dataHandler.setSrcId(data.dstId);
-                        if (serverConnection != null) {
+                        if (isConnected()) {
                             logger.warn("another server connection already exists. closing this connection");
                             dataHandler.end();
                         } else {

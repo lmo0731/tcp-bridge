@@ -92,8 +92,13 @@ public class TcpDataHandler implements Runnable {
     }
 
     public void send(byte[] b) throws Exception {
-        socket.getOutputStream().write(b);
-        listener.onWrite(id, b);
+        try {
+            socket.getOutputStream().write(b);
+            listener.onWrite(id, b);
+        } catch (Exception ex) {
+            this.end();
+            throw ex;
+        }
     }
 
     public void start() {

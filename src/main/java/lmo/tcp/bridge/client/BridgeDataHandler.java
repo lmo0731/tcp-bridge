@@ -59,9 +59,14 @@ public class BridgeDataHandler implements Runnable {
     }
 
     synchronized public void send(BridgeData data) throws Exception {
-        data.srcId = srcId;
-        data.write(socket.getOutputStream());
-        listener.onSend(data);
+        try {
+            data.srcId = srcId;
+            data.write(socket.getOutputStream());
+            listener.onSend(data);
+        } catch (Exception ex) {
+            this.end();
+            throw ex;
+        }
     }
 
     public void setSrcId(int srcId) {
