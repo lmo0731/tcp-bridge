@@ -13,13 +13,13 @@ import lmo.tcp.bridge.BridgeData;
  */
 public interface BridgeDataListener {
 
-    public void onConnect() throws Exception;
+    public void onConnect() throws Throwable;
 
-    public void onRead(BridgeData data) throws Exception;
+    public void onRead(BridgeData data) throws Throwable;
 
-    public void onSend(BridgeData data) throws Exception;
+    public void onSend(BridgeData data) throws Throwable;
 
-    public void onDisconnect() throws Exception;
+    public void onDisconnect() throws Throwable;
 
-    public void onError(String message, Exception ex);
+    public void onError(String message, Throwable ex);
 }

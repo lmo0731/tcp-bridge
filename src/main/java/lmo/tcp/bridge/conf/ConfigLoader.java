@@ -39,7 +39,7 @@ public class ConfigLoader {
         } finally {
             try {
                 in.close();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
         }
     }
@@ -76,7 +76,7 @@ public class ConfigLoader {
                 if (!sf.getReturnType().equals(Void.TYPE)) {
                     continue;
                 }
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 continue;
             }
             key = StringUtils.decapitalize(key);
@@ -102,7 +102,7 @@ public class ConfigLoader {
                             cs = pType.getActualTypeArguments();
                             //logger.debug(o + "." + f.getName() + " generic type: " + Arrays.toString(cs));
                         }
-                    } catch (Exception ex) {
+                    } catch (Throwable ex) {
                         logger.error(key + "", ex);
                     }
                     Object v = parse(f.getReturnType(), value, p, key, cs);
@@ -111,7 +111,7 @@ public class ConfigLoader {
                         logger.debug(key + " = " + (secure ? "****" : f.invoke(o)));
                         ret++;
                     }
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     logger.error("", ex);
                     continue;
                 }
@@ -151,7 +151,7 @@ public class ConfigLoader {
                             cs = pType.getActualTypeArguments();
                             //logger.debug(o + "." + f.getName() + " generic type: " + Arrays.toString(cs));
                         }
-                    } catch (Exception ex) {
+                    } catch (Throwable ex) {
                         logger.error(key + "", ex);
                     }
                     Object v = parse(f.getType(), value, p, key, cs);
@@ -160,7 +160,7 @@ public class ConfigLoader {
                         logger.debug(key + " = " + (secure ? "****" : f.get(o)));
                         ret++;
                     }
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     logger.error("", ex);
                     continue;
                 }
@@ -218,7 +218,7 @@ public class ConfigLoader {
             List o;
             try {
                 o = (List) type.newInstance();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 o = new ArrayList<Object>();
             }
             for (int i = 0; i < splitted.length; i++) {

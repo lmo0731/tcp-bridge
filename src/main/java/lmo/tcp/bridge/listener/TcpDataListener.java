@@ -11,13 +11,13 @@ package lmo.tcp.bridge.listener;
  */
 public interface TcpDataListener {
 
-    void onRead(int id, int seq, byte[] b) throws Exception;
+    void onRead(int id, int seq, byte[] b) throws Throwable;
 
-    void onWrite(int id, byte[] b) throws Exception;
+    void onWrite(int id, byte[] b) throws Throwable;
 
-    void onStart(int id) throws Exception;
+    void onStart(int id) throws Throwable;
 
-    void onEnd(int id) throws Exception;
+    void onEnd(int id) throws Throwable;
 
-    void onError(int id, String message, Exception ex);
+    void onError(int id, String message, Throwable ex);
 }

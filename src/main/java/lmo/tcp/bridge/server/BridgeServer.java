@@ -60,12 +60,12 @@ public class BridgeServer implements Runnable {
                 dataHandler.setListener(new BridgeDataListener() {
 
                     @Override
-                    public void onConnect() throws Exception {
+                    public void onConnect() throws Throwable {
                         logger.info("bridge client init");
                     }
 
                     @Override
-                    public void onRead(BridgeData d) throws Exception {
+                    public void onRead(BridgeData d) throws Throwable {
                         logger.info("received from bridge client: " + d);
                         if (d.dataType == BridgeData.TYPE_START) {
                             if (!clients.containsKey(d.srcId)) {
@@ -84,7 +84,7 @@ public class BridgeServer implements Runnable {
                                             d.data = new byte[0];
                                             d.dataLen = d.data.length;
                                             dataHandler.send(d);
-                                        } catch (Exception ex) {
+                                        } catch (Throwable ex) {
                                             logger.error("ping fail: " + dataHandler.id);
                                         }
                                     }
@@ -117,47 +117,47 @@ public class BridgeServer implements Runnable {
                     }
 
                     @Override
-                    public void onSend(BridgeData data) throws Exception {
+                    public void onSend(BridgeData data) throws Throwable {
                         logger.info("sent to bridge client: " + data);
                     }
 
                     @Override
-                    public void onDisconnect() throws Exception {
+                    public void onDisconnect() throws Throwable {
                         if (dataHandler.id != null) {
                             logger.info("bridge client disconnected: " + dataHandler.id);
                             clients.remove(dataHandler.id);
                         }
                         try {
                             pingTimer.cancel();
-                        } catch (Exception ex) {
+                        } catch (Throwable ex) {
                         }
                         try {
                             pingTimer.purge();
-                        } catch (Exception ex) {
+                        } catch (Throwable ex) {
                         }
                     }
 
                     @Override
-                    public void onError(String message, Exception ex) {
+                    public void onError(String message, Throwable ex) {
                         logger.error(message, ex);
                     }
                 });
                 dataHandler.start();
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             logger.error("bridge server error", ex);
         } finally {
             try {
                 ss.close();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             try {
                 timer.cancel();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             try {
                 timer.purge();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             for (BridgeDataHandler handler : clients.values()) {
                 handler.end();

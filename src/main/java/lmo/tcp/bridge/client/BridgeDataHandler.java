@@ -44,26 +44,26 @@ public class BridgeDataHandler implements Runnable {
                 BridgeData d = BridgeData.read(in);
                 listener.onRead(d);
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             listener.onError("server connection error", ex);
         } finally {
             try {
                 socket.close();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             try {
                 listener.onDisconnect();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
         }
     }
 
-    synchronized public void send(BridgeData data) throws Exception {
+    synchronized public void send(BridgeData data) throws Throwable {
         try {
             data.srcId = srcId;
             data.write(socket.getOutputStream());
             listener.onSend(data);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             this.end();
             throw ex;
         }
@@ -80,7 +80,7 @@ public class BridgeDataHandler implements Runnable {
     public void end() {
         try {
             socket.close();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
         }
     }
 

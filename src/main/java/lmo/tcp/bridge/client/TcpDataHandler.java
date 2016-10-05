@@ -77,25 +77,22 @@ public class TcpDataHandler implements Runnable {
                 }
                 listener.onRead(id, seq++, Arrays.copyOf(buffer, l));
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             listener.onError(id, "", ex);
         } finally {
-            try {
-                socket.close();
-            } catch (IOException ex) {
-            }
+            this.end();
             try {
                 listener.onEnd(id);
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
         }
     }
 
-    public void send(byte[] b) throws Exception {
+    public void send(byte[] b) throws Throwable {
         try {
             socket.getOutputStream().write(b);
             listener.onWrite(id, b);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             this.end();
             throw ex;
         }
@@ -108,7 +105,7 @@ public class TcpDataHandler implements Runnable {
     public void end() {
         try {
             socket.close();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
         }
     }
 

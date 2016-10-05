@@ -14,7 +14,7 @@ import lmo.tcp.bridge.listener.TcpDataListener;
 public class DefaultTcpDataListener implements TcpDataListener {
 
     @Override
-    public void onRead(int id, int seq, byte[] b) throws Exception {
+    public void onRead(int id, int seq, byte[] b) throws Throwable {
 
     }
 
@@ -34,7 +34,7 @@ public class DefaultTcpDataListener implements TcpDataListener {
     }
 
     @Override
-    public void onError(int id, String message, Exception ex) {
+    public void onError(int id, String message, Throwable ex) {
     }
 
 }

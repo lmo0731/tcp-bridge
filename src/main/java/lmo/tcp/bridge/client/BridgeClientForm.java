@@ -61,15 +61,15 @@ public class BridgeClientForm extends javax.swing.JFrame {
         public void onConnectionEnd() {
             try {
                 timers.getFirst().cancel();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             try {
                 timers.getFirst().purge();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             try {
                 timers.removeFirst();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
             }
             connectButton.setText("Connect");
             startButton.setEnabled(false);
@@ -379,7 +379,7 @@ public class BridgeClientForm extends javax.swing.JFrame {
                             timers.getFirst().cancel();
                             timers.getFirst().purge();
                             timers.removeFirst();
-                        } catch (Exception ex) {
+                        } catch (Throwable ex) {
                         }
                         logger.info("server connection ended, starting again");
                         client.connect();

@@ -35,7 +35,7 @@ public class DefaultBridgeDataListener implements BridgeDataListener {
     }
 
     @Override
-    public void onError(String message, Exception ex) {
+    public void onError(String message, Throwable ex) {
     }
 
 }
